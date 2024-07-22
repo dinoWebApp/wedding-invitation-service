@@ -52,7 +52,8 @@
       referrerpolicy="no-referrer"
     ></script>
     <script type="text/javascript" 
-    src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=22m6duej17"></script>
+    src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=22m6duej17&submodules=geocoder"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=bcadbce6440f7f6a3e88962dbed644a2"></script>
     <script>
       $(function () {
         $("body").sakura();
@@ -454,9 +455,7 @@
         </a>
         <div id="map"></div>
         <div class="buttons">
-          <button onclick="navigateNaver()">네이버지도</button>
-          <button onclick="navigateKakao()">카카오맵</button>
-          <button onclick="navigateTMap()">티맵</button>
+          <button class="kakao_nav">카카오맵</button>
         </div>
       </section>
 
@@ -529,9 +528,9 @@
           }, 4000);
 
           setTimeout(function () {
-            /*$('.intro').slideUp(1000, function(){
-        $(this).remove();
-    });*/
+                  /*$('.intro').slideUp(1000, function(){
+              $(this).remove();
+          });*/
             $(".intro").fadeTo(1000, 0, function () {
               $(this).remove();
             });
@@ -637,7 +636,39 @@
             window.scrollTo(0, galleryScroll);
           }, 100);
         });
+        const address = '대구 동구 신서동 496 칼라디움웨딩홀';
+        let lat = '';
+        let lng = '';
+        $.ajax({
+          url: 'https://dapi.kakao.com/v2/local/search/address.json?query=' + encodeURI(address),
+          type: 'GET',
+          headers: {
+            Authorization: 'KakaoAK 997f179a6b53d7dab449dac42cc4ca01',
+          },
+          success: function(response) {
+            console.log(response);
+            lat = response.documents[0].address.y;
+            lng = response.documents[0].address.x;
+            var container = document.getElementById('map'); //지도를 담을 영역의 DOM 레퍼런스
+            var options = { //지도를 생성할 때 필요한 기본 옵션
+              center: new kakao.maps.LatLng(lat, lng), //지도의 중심좌표.
+              level: 3 //지도의 레벨(확대, 축소 정도)
+            };
+
+            var map = new kakao.maps.Map(container, options); //지도 생성 및 객체 리턴 
+          },
+          error: function(xhr, status, error) {
+            console.log(xhr);
+          }
+        });
+        
+        $('.kakao_nav').on('click', function(){
+          console.log(lat, lng)
+          const url = `https://map.kakao.com/link/to/칼라디움웨딩홀,${lat},${lng}`;
+          window.open(url, '_blank');
+        })
       });
+
       $(window).on("load", function () {
         $(".gallery_img").each(function () {
           let width = $(this).width();
@@ -649,36 +680,6 @@
           }
         });
       });
-      const address = "대구 동구 반야월로 400"; // 표시할 주소
-      const lat = 35.8713700295426; // 위도
-      const lng = 128.732449580338; // 경도
-
-      // 네이버 지도 초기화
-      var mapOptions = {
-        center: new naver.maps.LatLng(lat, lng),
-        zoom: 15
-      };
-      var map = new naver.maps.Map('map', mapOptions);
-      var marker = new naver.maps.Marker({
-        position: new naver.maps.LatLng(lat, lng),
-        map: map
-      })        
-      function navigateNaver() {
-          const url = `https://map.naver.com/v5/directions/-/${lat},${lng}`;
-          window.open(url, '_blank');
-      }
-
-      function navigateKakao() {
-          const url = `https://map.kakao.com/link/to/${encodeURIComponent(address)},${lat},${lng}`;
-          window.open(url, '_blank');
-      }
-
-      function navigateTMap() {
-          const url = `https://www.tmap.co.kr/tmap2/mobile/mainRoute?startX=126.9780&startY=37.5665&endX=${lng}&endY=${lat}`;
-          window.open(url, '_blank');
-      }
-
-
       function refreshGif() {
         let gifSource = "/assets/images/gif/heart-final.gif";
         let timestamp = new Date().getTime();
